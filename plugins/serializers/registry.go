@@ -8,6 +8,7 @@ import (
 	"github.com/influxdata/telegraf/plugins/serializers/graphite"
 	"github.com/influxdata/telegraf/plugins/serializers/influx"
 	"github.com/influxdata/telegraf/plugins/serializers/json"
+	"github.com/influxdata/telegraf/plugins/serializers/druid"
 )
 
 // SerializerOutput is an interface for output plugins that are able to
@@ -51,6 +52,8 @@ func NewSerializer(config *Config) (Serializer, error) {
 		serializer, err = NewGraphiteSerializer(config.Prefix, config.Template)
 	case "json":
 		serializer, err = NewJsonSerializer()
+	case "druid":
+		serializer, err = NewDruidSerializer()
 	default:
 		err = fmt.Errorf("Invalid data format: %s", config.DataFormat)
 	}
@@ -59,6 +62,10 @@ func NewSerializer(config *Config) (Serializer, error) {
 
 func NewJsonSerializer() (Serializer, error) {
 	return &json.JsonSerializer{}, nil
+}
+
+func NewDruidSerializer() (Serializer, error) {
+	return &druid.DruidSerializer{}, nil
 }
 
 func NewInfluxSerializer() (Serializer, error) {
