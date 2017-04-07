@@ -14,7 +14,7 @@ func (s *DruidSerializer) Serialize(metric telegraf.Metric) ([]byte, error) {
 	for key, value := range metric.Fields() {
 		m := make(map[string]interface{})
 		m["origin"] = metric.Name()
-		m["timestamp"] = metric.UnixNano() / 1000000000
+		m["timestamp"] = metric.UnixNano() / 1000000
 
 		m["name"] = key
 		for keyTag, valueTag := range metric.Tags() {
