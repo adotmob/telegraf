@@ -10,6 +10,7 @@ import (
 	"github.com/influxdata/telegraf/plugins/serializers"
 
 	"github.com/Shopify/sarama"
+	"bytes"
 )
 
 type Kafka struct {
@@ -156,19 +157,24 @@ func (k *Kafka) Write(metrics []telegraf.Metric) error {
 
 	for _, metric := range metrics {
 		buf, err := k.serializer.Serialize(metric)
+		messages := make([]*sarama.ProducerMessage,0)
+
 		if err != nil {
 			return err
 		}
 
-		m := &sarama.ProducerMessage{
-			Topic: k.Topic,
-			Value: sarama.ByteEncoder(buf),
-		}
-		if h, ok := metric.Tags()[k.RoutingTag]; ok {
-			m.Key = sarama.StringEncoder(h)
+		for _, part := range bytes.Split(buf,[]byte("\n")) {
+			m := &sarama.ProducerMessage{
+				Topic: k.Topic,
+				Value: sarama.ByteEncoder(part),
+			}
+			if h, ok := metric.Tags()[k.RoutingTag]; ok {
+				m.Key = sarama.StringEncoder(h)
+			}
+			messages = append(messages,m)
 		}
 
-		_, _, err = k.producer.SendMessage(m)
+		err = k.producer.SendMessages(messages)
 
 		if err != nil {
 			return fmt.Errorf("FAILED to send kafka message: %s\n", err)
